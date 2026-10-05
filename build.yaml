@@ -1,6 +1,12 @@
 include:
   - board: seeeduino_xiao_ble
     shield: totem_left
+    snippet: studio-rpc-usb-uart
+    cmake-args: -DCONFIG_ZMK_STUDIO=y
+    artifact-name: totem-left
   - board: seeeduino_xiao_ble
     shield: totem_right
-# there is no settingsreset (needed) for the XIAO
+    artifact-name: totem-right
+  - board: seeeduino_xiao_ble
+    shield: settings_reset
+    artifact-name: totem-settings-reset

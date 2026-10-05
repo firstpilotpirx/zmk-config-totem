@@ -63,3 +63,110 @@ index 3df3bc8..91c987b 100644
          .hold_trigger_on_release = DT_INST_PROP(n, hold_trigger_on_release),                       \
          .hold_trigger_key_positions = DT_INST_PROP(n, hold_trigger_key_positions),                 \
          .hold_trigger_key_positions_len = DT_INST_PROP_LEN(n, hold_trigger_key_positions),         \
+diff --git a/app/tests/hold-tap/hold-preferred/9-retro-shift/events.patterns b/app/tests/hold-tap/hold-preferred/9-retro-shift/events.patterns
+new file mode 100644
+index 0000000..4db2191
+--- /dev/null
++++ b/app/tests/hold-tap/hold-preferred/9-retro-shift/events.patterns
+@@ -0,0 +1,6 @@
++s/.*hid_listener_keycode/kp/p
++s/.*mo_keymap_binding/mo/p
++s/.*on_hold_tap_binding/ht_binding/p
++s/.*decide_hold_tap/ht_decide/p
++s/.*update_hold_status_for_retro_tap/update_hold_status_for_retro_tap/p
++s/.*decide_retro_tap/decide_retro_tap/p
+\ No newline at end of file
+diff --git a/app/tests/hold-tap/hold-preferred/9-retro-shift/keycode_events.snapshot b/app/tests/hold-tap/hold-preferred/9-retro-shift/keycode_events.snapshot
+new file mode 100644
+index 0000000..113314f
+--- /dev/null
++++ b/app/tests/hold-tap/hold-preferred/9-retro-shift/keycode_events.snapshot
+@@ -0,0 +1,30 @@
++ht_binding_pressed: 0 new undecided hold_tap
++ht_decide: 0 decided tap (hold-preferred decision moment key-up)
++kp_pressed: usage_page 0x07 keycode 0x04 implicit_mods 0x00 explicit_mods 0x00
++kp_released: usage_page 0x07 keycode 0x04 implicit_mods 0x00 explicit_mods 0x00
++ht_binding_released: 0 cleaning up hold-tap
++ht_binding_pressed: 0 new undecided hold_tap
++ht_decide: 0 decided hold-timer (hold-preferred decision moment timer)
++decide_retro_tap: 0 retro tap
++kp_pressed: usage_page 0x07 keycode 0x04 implicit_mods 0x02 explicit_mods 0x00
++kp_released: usage_page 0x07 keycode 0x04 implicit_mods 0x02 explicit_mods 0x00
++ht_binding_released: 0 cleaning up hold-tap
++ht_binding_pressed: 0 new undecided hold_tap
++ht_decide: 0 decided hold-timer (hold-preferred decision moment timer)
++decide_retro_tap: 0 retro shift expired
++ht_binding_released: 0 cleaning up hold-tap
++ht_binding_pressed: 0 new undecided hold_tap
++ht_decide: 0 decided hold-timer (hold-preferred decision moment timer)
++update_hold_status_for_retro_tap: Update hold tap 0 status to hold-interrupt
++kp_pressed: usage_page 0x07 keycode 0xE0 implicit_mods 0x00 explicit_mods 0x00
++kp_pressed: usage_page 0x07 keycode 0x07 implicit_mods 0x00 explicit_mods 0x00
++kp_released: usage_page 0x07 keycode 0x07 implicit_mods 0x00 explicit_mods 0x00
++kp_released: usage_page 0x07 keycode 0xE0 implicit_mods 0x00 explicit_mods 0x00
++ht_binding_released: 0 cleaning up hold-tap
++ht_binding_pressed: 0 new undecided hold_tap
++ht_decide: 0 decided hold-interrupt (hold-preferred decision moment other-key-down)
++kp_pressed: usage_page 0x07 keycode 0xE0 implicit_mods 0x00 explicit_mods 0x00
++kp_pressed: usage_page 0x07 keycode 0x07 implicit_mods 0x00 explicit_mods 0x00
++kp_released: usage_page 0x07 keycode 0x07 implicit_mods 0x00 explicit_mods 0x00
++kp_released: usage_page 0x07 keycode 0xE0 implicit_mods 0x00 explicit_mods 0x00
++ht_binding_released: 0 cleaning up hold-tap
+diff --git a/app/tests/hold-tap/hold-preferred/9-retro-shift/native_posix_64.keymap b/app/tests/hold-tap/hold-preferred/9-retro-shift/native_posix_64.keymap
+new file mode 100644
+index 0000000..89ad973
+--- /dev/null
++++ b/app/tests/hold-tap/hold-preferred/9-retro-shift/native_posix_64.keymap
+@@ -0,0 +1,52 @@
++#include <dt-bindings/zmk/keys.h>
++#include <behaviors.dtsi>
++#include <dt-bindings/zmk/kscan_mock.h>
++
++/ {
++    behaviors {
++        ht_rs: behavior_retro_shift {
++            compatible = "zmk,behavior-hold-tap";
++            #binding-cells = <2>;
++            flavor = "hold-preferred";
++            tapping-term-ms = <175>;
++            bindings = <&kp>, <&kp>;
++            retro-tap;
++            retro-shift-ms = <500>;
++        };
++    };
++
++    keymap {
++        compatible = "zmk,keymap";
++
++        default_layer {
++            bindings = <
++                &ht_rs LEFT_CONTROL A &none
++                &kp D &none>;
++        };
++    };
++};
++
++
++&kscan {
++    events = <
++        /* tap: a */
++        ZMK_MOCK_PRESS(0,0,10)
++        ZMK_MOCK_RELEASE(0,0,10)
++        /* lone hold within retro-shift-ms: A */
++        ZMK_MOCK_PRESS(0,0,300)
++        ZMK_MOCK_RELEASE(0,0,10)
++        /* lone hold beyond retro-shift-ms: nothing */
++        ZMK_MOCK_PRESS(0,0,600)
++        ZMK_MOCK_RELEASE(0,0,10)
++        /* hold past tapping term, then another key: ctrl+d */
++        ZMK_MOCK_PRESS(0,0,300)
++        ZMK_MOCK_PRESS(1,0,10)
++        ZMK_MOCK_RELEASE(1,0,10)
++        ZMK_MOCK_RELEASE(0,0,10)
++        /* another key within tapping term: ctrl+d */
++        ZMK_MOCK_PRESS(0,0,50)
++        ZMK_MOCK_PRESS(1,0,10)
++        ZMK_MOCK_RELEASE(1,0,10)
++        ZMK_MOCK_RELEASE(0,0,10)
++    >;
++};

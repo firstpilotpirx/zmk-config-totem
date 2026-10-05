@@ -101,7 +101,7 @@ for speed in [200,1200]:
 for name, keys in zip(names+['MOUSE_SLOW','MOUSE_FAST'],layers):
     header += f'        {name.lower()} {{\n            display-name = "{name}";\n            bindings = <\n'
     for start,end in [(0,10),(10,20),(20,32),(32,38)]:
-        header += '                '+'  '.join(f'{s:<21}' for s in keys[start:end])+'\n'
+        header += '                '+'  '.join(f'{s:<21}' for s in keys[start:end]).rstrip()+'\n'
     header += '            >;\n        };\n'
 header += '    };\n};\n'
 (ROOT/'config/totem.keymap').write_text(header)

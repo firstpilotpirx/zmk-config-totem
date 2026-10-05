@@ -32,12 +32,13 @@ positions (`KC_NO` -> `&none`, not transparent).
 
 - Normal letters, digits, punctuation and standalone Tab use Auto Shift at 175 ms.
   Hold past this threshold to send the shifted key, including host key repeat.
-- Home-row mods use 175 ms hold-taps with retro-tap. A solo hold/release produces
-  the unshifted letter. QMK Retro Shift (uppercase on solo release between 175 and
-  500 ms) is NOT reproduced on these eight keys. ZMK retro-tap also defers the
-  modifier until another keyboard key is pressed: modifier + physical mouse click
-  is not equivalent to QMK's >500 ms hold. Use the dedicated modifiers on NAV/NUM/FUN
-  for mouse-click combinations, or tune/replace this behavior after testing.
+- Home-row mods use 175 ms hold-taps with retro-tap plus `retro-shift-ms = <500>`,
+  a property added by `patches/zmk/0001-hold-tap-retro-shift.patch` (applied to ZMK
+  by `.github/workflows/build.yml`). As in QMK Retro Shift: a solo hold released
+  between 175 and 500 ms sends the shifted letter, a longer solo hold sends nothing.
+  ZMK retro-tap still defers the modifier until another keyboard key is pressed:
+  modifier + physical mouse click is not equivalent to QMK's >500 ms hold. Use the
+  dedicated modifiers on NAV/NUM/FUN for mouse-click combinations.
 - Same-hand non-mod keys and opposite-hand keys can trigger home-row holds.
   Same-hand home-row-mod rolls favor taps. QMK PERMISSIVE_HOLD's nested same-hand
   mod-tap sequences are not exactly equivalent to ZMK positional hold-tap.

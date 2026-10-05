@@ -1,0 +1,65 @@
+diff --git a/app/dts/bindings/behaviors/zmk,behavior-hold-tap.yaml b/app/dts/bindings/behaviors/zmk,behavior-hold-tap.yaml
+index 76f14d1..341caa1 100644
+--- a/app/dts/bindings/behaviors/zmk,behavior-hold-tap.yaml
++++ b/app/dts/bindings/behaviors/zmk,behavior-hold-tap.yaml
+@@ -43,6 +43,9 @@ properties:
+     type: boolean
+   retro-tap:
+     type: boolean
++  retro-shift-ms:
++    type: int
++    default: 0
+   hold-trigger-key-positions:
+     type: array
+     required: false
+diff --git a/app/src/behaviors/behavior_hold_tap.c b/app/src/behaviors/behavior_hold_tap.c
+index 3df3bc8..91c987b 100644
+--- a/app/src/behaviors/behavior_hold_tap.c
++++ b/app/src/behaviors/behavior_hold_tap.c
+@@ -62,6 +62,7 @@ struct behavior_hold_tap_config {
+     bool hold_while_undecided;
+     bool hold_while_undecided_linger;
+     bool retro_tap;
++    int retro_shift_ms;
+     bool hold_trigger_on_release;
+     int32_t hold_trigger_key_positions_len;
+     int32_t hold_trigger_key_positions[];
+@@ -574,11 +575,20 @@ static void decide_hold_tap(struct active_hold_tap *hold_tap,
+     release_captured_events();
+ }
+ 
+-static void decide_retro_tap(struct active_hold_tap *hold_tap) {
++static void decide_retro_tap(struct active_hold_tap *hold_tap, int64_t release_timestamp) {
+     if (!hold_tap->config->retro_tap) {
+         return;
+     }
+     if (hold_tap->status == STATUS_HOLD_TIMER) {
++        if (hold_tap->config->retro_shift_ms > 0) {
++            // Retro shift: a lone hold released within retro-shift-ms taps the shifted key,
++            // a longer one taps nothing.
++            if (release_timestamp - hold_tap->timestamp > hold_tap->config->retro_shift_ms) {
++                LOG_DBG("%d retro shift expired", hold_tap->position);
++                return;
++            }
++            hold_tap->param_tap = LS(hold_tap->param_tap);
++        }
+         release_binding(hold_tap);
+         LOG_DBG("%d retro tap", hold_tap->position);
+         hold_tap->status = STATUS_TAP;
+@@ -656,7 +666,7 @@ static int on_hold_tap_binding_released(struct zmk_behavior_binding *binding,
+     }
+ 
+     decide_hold_tap(hold_tap, HT_KEY_UP);
+-    decide_retro_tap(hold_tap);
++    decide_retro_tap(hold_tap, event.timestamp);
+     release_binding(hold_tap);
+ 
+     if (hold_tap->config->hold_while_undecided && hold_tap->config->hold_while_undecided_linger) {
+@@ -870,6 +880,7 @@ static int behavior_hold_tap_init(const struct device *dev) {
+         .hold_while_undecided = DT_INST_PROP(n, hold_while_undecided),                             \
+         .hold_while_undecided_linger = DT_INST_PROP(n, hold_while_undecided_linger),               \
+         .retro_tap = DT_INST_PROP(n, retro_tap),                                                   \
++        .retro_shift_ms = DT_INST_PROP(n, retro_shift_ms),                                         \
+         .hold_trigger_on_release = DT_INST_PROP(n, hold_trigger_on_release),                       \
+         .hold_trigger_key_positions = DT_INST_PROP(n, hold_trigger_key_positions),                 \
+         .hold_trigger_key_positions_len = DT_INST_PROP_LEN(n, hold_trigger_key_positions),         \

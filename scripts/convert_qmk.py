@@ -80,6 +80,7 @@ for hand, excluded in [('l',set(range(10,14))),('r',set(range(16,20)))]:
             flavor = "hold-preferred";
             tapping-term-ms = <175>;
             retro-tap;
+            retro-shift-ms = <500>;
             hold-trigger-key-positions = <{positions}>;
             display-name = "Home row {hand.upper()}";
         }};
